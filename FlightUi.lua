@@ -1,9 +1,10 @@
--- FlightUi 1.0.0 | made by rayware
--- A client-side UI library. Loading this module creates no window or gameplay features.
+-- FlightUi 1.1.0 | made by rayware
+-- Built-in demo opens by default. Pass {Demo = false} to load only the API.
+local launchOptions = ...
 local Players = game:GetService('Players')
 local TweenService = game:GetService('TweenService')
 local Input = game:GetService('UserInputService')
-local FlightUi = {Version = '1.0.0'}
+local FlightUi = {Version = '1.1.0'}
 local Window = {}; Window.__index = Window
 local Tab = {}; Tab.__index = Tab
 local Control = {}; Control.__index = Control
@@ -671,5 +672,96 @@ function FlightUi:CreateWindow(config)
     w._scale.Scale=w.ReduceMotion and w._baseScale or w._baseScale*0.85
     w:_tween(w._scale,0.6,{Scale=w._baseScale},true)
     return w
+end
+-- Integrated demo: no separate demo.lua or extra download is required.
+function FlightUi:CreateDemo(config)
+    local env = getgenv and getgenv() or _G
+    if env.FlightUiDemo then
+        pcall(function() env.FlightUiDemo:Destroy() end)
+    end
+    local options = {
+        Id = 'FlightUiDemo',
+        Title = 'FlightUi',
+        Subtitle = 'LIQUID GLASS / TEST INTERFACE',
+        Author = 'rayware',
+        Theme = 'Rose',
+        Width = 430,
+        Height = 450,
+        Welcome = true,
+        WelcomeText = 'welcome,',
+        LoadingText = 'Preparing FlightUi',
+        LoadingDuration = 1.5,
+        MiniTitle = 'FlightUi',
+        MiniSubtitle = 'demo / tap to open',
+        Footer = 'FLIGHTUI / DEMO',
+        Themes = {
+            Violet = {
+                Accent = rgb(180,146,255),
+                Background = rgb(27,25,43),
+                Surface = rgb(44,38,65),
+            },
+        },
+    }
+    for key,value in pairs(config or {}) do options[key] = value end
+    local window = self:CreateWindow(options)
+    env.FlightUiDemo = window
+    self.DemoWindow = window
+
+    local main = window:AddTab('Main')
+    main:AddSection('TEST CONTROLS')
+    local status = main:AddLabel({
+        Text = 'Ready to test',
+        Description = 'These controls have no gameplay effects.',
+    })
+    main:AddButton({
+        Name = 'Say hello',
+        Description = 'Print a message in the console.',
+        Callback = function()
+            print('[FlightUi] Hello from rayware!')
+            status:SetText('Hello from rayware!')
+            window:Notify('Message printed in the console',3)
+        end,
+    })
+    main:AddToggle({
+        Name = 'Test toggle',
+        Description = 'Print true / false in the console.',
+        Default = false,
+        Flag = 'TestEnabled',
+        Callback = function(value)
+            print('[FlightUi] Test toggle:',value)
+            status:SetText(value and 'Test toggle is ON' or 'Test toggle is OFF')
+        end,
+    })
+    main:AddSlider({
+        Name = 'Test value',
+        Description = 'A slider with no gameplay function.',
+        Min = 0, Max = 100, Step = 1, Default = 45,
+        Suffix = '%', Flag = 'TestValue',
+        Callback = function(value) print('[FlightUi] Test value:',value) end,
+    })
+    local more = window:AddTab('More')
+    more:AddSlider({
+        Name = 'Decimal slider', Min = -1, Max = 1, Step = 0.1, Default = 0,
+        Callback = function(value) print('[FlightUi] Decimal:',value) end,
+    })
+    more:AddButton({Name = 'Print current values',Callback = function()
+        for flag,value in pairs(window.Values) do print('[FlightUi]',flag,value) end
+    end})
+    more:AddButton({Name = 'Minimize window',Callback = function() window:Minimize() end})
+    more:AddLabel('Drag the title. Drag the mini-menu to move it.')
+    window:AddSettingsTab({
+        Name = 'Settings', Credit = 'made by rayware',
+        Description = 'FlightUi 1.1 / choose your color theme above',
+    })
+    return window
+end
+
+-- The options table is passed to the loaded chunk, not to its returned API.
+-- loadstring(game:HttpGet(URL))()                 -> built-in demo + API
+-- loadstring(game:HttpGet(URL))({Demo = false})   -> API only
+-- Lowercase {demo = false} is accepted as well.
+if type(launchOptions) ~= 'table' then launchOptions = {} end
+if launchOptions.Demo ~= false and launchOptions.demo ~= false then
+    FlightUi:CreateDemo(launchOptions.DemoConfig)
 end
 return FlightUi
